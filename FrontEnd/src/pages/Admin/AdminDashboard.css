@@ -1,0 +1,79 @@
+/* AdminDashboard.css */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .stats-section {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+  
+  .stats-section h2 {
+    color: #0C508A;
+    margin-bottom: 15px;
+  }
+  
+  .stats-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .stats-section li {
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .complaints-list {
+    display: grid;
+    gap: 20px;
+  }
+  
+  .complaint-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .complaint-content {
+    flex: 1;
+  }
+  
+  .complaint-content h3 {
+    margin: 0 0 10px;
+    color: #0C508A;
+  }
+  
+  .complaint-content p {
+    margin: 0 0 10px;
+    color: #555;
+  }
+  
+  .complaint-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #777;
+  }
+  
+  .delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .delete-btn:hover {
+    background: #bb2d3b;
+  }

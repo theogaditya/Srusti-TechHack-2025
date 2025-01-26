@@ -370,7 +370,6 @@ const syncComplaints = async () => {
               Submit
             </button>
           </div>
-          <button onClick={syncComplaints}>Sync Complaints</button>
         </div>
       )}
     </div>

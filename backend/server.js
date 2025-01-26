@@ -222,49 +222,34 @@ app.put("/complaints/:id/upvote", checkAuth, async (req, res) => {
 // // ADMIN // //
 // Admin Authentication
 const checkAdminAuth = (req, res, next) => {
-    const token = req.headers.authorization;
-    if (!token) {
-        return res.status(401).json({ msg: "No token provided" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ msg: "No token provided or invalid token format" });
     }
-
-    jwt.verify(token, JWT_PASS, (err, decoded) => {
-        if (err || decoded.role !== 'admin') {
-            return res.status(403).json({ msg: "Access denied" });
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ msg: "Invalid or expired token" });
         }
-        req.admin = decoded; 
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ msg: "Access denied: Admin role required" });
+        }
+        req.admin = decoded;
         next();
     });
 };
 
-// Admin Signup
-app.post('/admin/signup', async (req, res) => {
-    const { username, email, password } = req.body;
+// Admin signin
+const ADMIN_EMAIL = 'admin@gmail.com';
+const ADMIN_PASSWORD = '123'; 
 
-    try {
-        const existingAdmin = await Admin.findOne({ email });
-        if (existingAdmin) {
-            return res.status(400).json({ msg: 'Admin already exists' });
-        }
-        const newAdmin = new Admin({ username, email, password });
-        await newAdmin.save();
-
-        res.status(201).json({ msg: 'Admin registered successfully!' });
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ msg: "Internal server error" });
-    }
-});
-
-// Admin Signin
 app.post('/admin/signin', async (req, res) => {
-    const email  = req.body.email;
-    const password = req.body.password;
+    const { email, password } = req.body;
     try {
-        const admin = await Admin.findOne({ email });
-        if (!admin || admin.password !== password) {
+        if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
             return res.status(400).json({ msg: "Invalid credentials" });
         }
-        const token = jwt.sign({ email: admin.email, role: 'admin' }, JWT_PASS, { expiresIn: '1h' });
+        const token = jwt.sign({ email: ADMIN_EMAIL, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ msg: 'Welcome, Admin!', token });
     } catch (error) {
         console.error("Error:", error);
@@ -434,6 +419,7 @@ app.put("/complaints/:id/status", async (req, res) => {
         res.status(500).json({ msg: "Internal server error." });
     }
 });
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);

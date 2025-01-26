@@ -6,6 +6,8 @@ import { Home } from "./Home";
 import { Layout } from "./Layout";
 import { Dashboard } from "./pages/UserLanding/Dashboard";
 import { SubmitComplaint } from "./pages/UserLanding/SubmitComplaint";
+import { AdminLogin } from "./pages/Admin/AdminLogin";
+import { AdminDashboard } from "./pages/Admin/AdminDashboard"
 
 function Routing() {
   return (
@@ -16,6 +18,10 @@ function Routing() {
         <Route path="signup" element={<SignUp />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="submit-complaint" element={<SubmitComplaint />} />
+
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
     </Routes>

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { addComplaintToIndexedDB, getComplaintsFromIndexedDB, clearComplaintsFromIndexedDB } from "../../utils/indexedDB";
 
-interface Complaint {
+export interface Complaint {
   _id: string;
   title: string;
   description: string;
