@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { NavNav } from "../../components/NavNav";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import { useTranslation } from "react-i18next";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { addComplaintToIndexedDB, getComplaintsFromIndexedDB, clearComplaintsFromIndexedDB } from "../../utils/indexedDB";
 
 interface Complaint {
   _id: string;
@@ -10,27 +13,26 @@ interface Complaint {
   category: string;
   upvotes: number;
   createdAt: string;
-  userEmail: string; // Add userEmail to the interface
+  userEmail: string;
 }
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showMostUpvoted, setShowMostUpvoted] = useState(false); // State to toggle sorting
-  const [showUserComplaints, setShowUserComplaints] = useState(false); // State to toggle user-specific complaints
+  const [showMostUpvoted, setShowMostUpvoted] = useState(false);
+  const [showUserComplaints, setShowUserComplaints] = useState(false);
 
   useEffect(() => {
-    // Check authentication
     const token = localStorage.getItem("token");
     if (!token) navigate("/login");
 
-    // Fetch complaints
     const fetchComplaints = async () => {
       try {
         const response = await fetch("http://localhost:3000/complaints");
         const data = await response.json();
-        setComplaints(data.complaints); // Now matches server response
+        setComplaints(data.complaints);
       } catch (error) {
         console.error("Error fetching complaints:", error);
       } finally {
@@ -67,23 +69,20 @@ export function Dashboard() {
     }
   };
 
-  // Function to sort complaints by upvotes
   const sortComplaintsByUpvotes = () => {
     const sortedComplaints = [...complaints].sort((a, b) => b.upvotes - a.upvotes);
     setComplaints(sortedComplaints);
-    setShowMostUpvoted(true); // Set the state to indicate sorting is applied
+    setShowMostUpvoted(true);
   };
 
-  // Function to reset sorting (show original order)
   const resetSorting = () => {
     const originalOrder = [...complaints].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
     setComplaints(originalOrder);
-    setShowMostUpvoted(false); // Reset the state
+    setShowMostUpvoted(false);
   };
 
-  // Function to fetch user-specific complaints
   const fetchUserComplaints = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -95,62 +94,98 @@ export function Dashboard() {
         },
       });
       const data = await response.json();
-      setComplaints(data.complaints); // Set user-specific complaints
-      setShowUserComplaints(true); // Enable user-specific complaints view
+      setComplaints(data.complaints);
+      setShowUserComplaints(true);
     } catch (error) {
       console.error("Error fetching user complaints:", error);
     }
   };
 
-  // Function to reset to all complaints
   const resetToAllComplaints = async () => {
     try {
       const response = await fetch("http://localhost:3000/complaints");
       const data = await response.json();
-      setComplaints(data.complaints); // Reset to all complaints
-      setShowUserComplaints(false); // Disable user-specific complaints view
+      setComplaints(data.complaints);
+      setShowUserComplaints(false);
     } catch (error) {
       console.error("Error fetching all complaints:", error);
     }
   };
 
+
+
+  const syncComplaints = async () => {
+    console.log("Syncing complaints...");
+    const complaints = await getComplaintsFromIndexedDB();
+    console.log("Complaints from IndexedDB:", complaints);
+  
+    if (complaints.length > 0) {
+      try {
+        const response = await fetch("http://localhost:3000/complaints/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ complaints }),
+        });
+  
+        if (response.ok) {
+          console.log("Complaints synced successfully!");
+          await clearComplaintsFromIndexedDB();
+          alert("Offline complaints synced successfully!");
+          
+          // Refresh the dashboard to show the newly synced complaints
+          window.location.reload(); // Or use a state update to refresh the dashboard
+        } else {
+          console.error("Failed to sync complaints:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error syncing complaints:", error);
+      }
+    } else {
+      console.log("No complaints to sync.");
+    }
+  };
+
+
+
+
   return (
     <div>
       <NavNav />
       <div className="dashboard-container">
-        {/* Buttons above the heading */}
         <div className="dashboard-actions">
           <button
             onClick={() => navigate("/submit-complaint")}
             className="register-complaint-btn"
           >
-            Register New Complaint
+            {t("dashboard.registerNewComplaint")}
           </button>
           {showMostUpvoted ? (
             <button onClick={resetSorting} className="sort-button">
-              Show All Complaints
+              {t("dashboard.showAllComplaints")}
             </button>
           ) : (
             <button onClick={sortComplaintsByUpvotes} className="sort-button">
-              Show Most Upvoted
+              {t("dashboard.showMostUpvoted")}
             </button>
           )}
           {showUserComplaints ? (
             <button onClick={resetToAllComplaints} className="sort-button">
-              Show All Complaints
+              {t("dashboard.showAllComplaints")}
             </button>
           ) : (
             <button onClick={fetchUserComplaints} className="sort-button">
-              Show My Complaints
+              {t("dashboard.showMyComplaints")}
             </button>
           )}
         </div>
 
-        {/* Centered heading */}
-        <h1 className="dashboard-heading">📈Trading Complaints</h1>
-        <br></br>
+        <h1 className="dashboard-heading">{t("dashboard.heading")}</h1>
+        <br />
         {loading ? (
-          <p>Loading complaints...</p>
+          <p>{t("dashboard.loading")}</p>
         ) : (
           <div className="complaints-list">
             {complaints.map((complaint) => (
@@ -159,9 +194,9 @@ export function Dashboard() {
                   <h3>{complaint.title}</h3>
                   <p>{complaint.description}</p>
                   <div className="complaint-meta">
-                    <span>Category: {complaint.category}</span>
+                    <span>{complaint.category}</span>
                     <span>
-                      Created: {new Date(complaint.createdAt).toLocaleDateString()}
+                      {new Date(complaint.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -170,7 +205,11 @@ export function Dashboard() {
                     onClick={() => handleUpvote(complaint._id)}
                     className="upvote-btn"
                   >
-                    ⬆️Upvote
+                    {complaint.upvotes > 0 ? (
+                      <FaHeart className="heart-icon filled" />
+                    ) : (
+                      <FaRegHeart className="heart-icon" />
+                    )}
                   </button>
                   <span className="upvote-count">{complaint.upvotes}</span>
                 </div>

@@ -81,3 +81,23 @@
   background-color: rgba(0, 85, 179, 0.9); /* Slightly opaque hover effect */
   color: white;
 }
+
+
+.language-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.language-selector button {
+  background-color: #0f538d;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.language-selector button:hover {
+  background-color: #0056b3;
+}

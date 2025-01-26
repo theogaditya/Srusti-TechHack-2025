@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { addComplaintToIndexedDB, getComplaintsFromIndexedDB, clearComplaintsFromIndexedDB } from "../../utils/indexedDB";
 import "./SubmitComplaint.css";
 
 export function SubmitComplaint() {
@@ -16,21 +17,97 @@ export function SubmitComplaint() {
     consentForFollowUp: false,
   });
   const [error, setError] = useState("");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
+  // Listen for online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log("App is online.");
+      setIsOnline(true);
+    };
+  
+    const handleOffline = () => {
+      console.log("App is offline.");
+      setIsOnline(false);
+    };
+  
+    // Add event listeners
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+  
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Sync complaints when online
+  useEffect(() => {
+    if (isOnline) {
+      console.log("App is online. Syncing complaints...");
+      syncComplaints();
+    }
+  }, [isOnline]);
+
+  // Function to sync complaints from IndexedDB to the server
+
+
+const syncComplaints = async () => {
+  console.log("Syncing complaints...");
+  const complaints = await getComplaintsFromIndexedDB();
+  console.log("Complaints from IndexedDB:", complaints);
+
+  if (complaints.length > 0) {
+    try {
+      const response = await fetch("http://localhost:3000/complaints/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ complaints }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Failed to sync complaints:", errorData);
+        throw new Error(errorData.msg || "Failed to sync complaints");
+      }
+
+      const data = await response.json();
+      console.log("Complaints synced successfully:", data);
+      await clearComplaintsFromIndexedDB();
+      alert("Offline complaints synced successfully!");
+    } catch (error) {
+      console.error("Error syncing complaints:", error);
+      alert(`Failed to sync complaints: ${
+        error instanceof Error ? error.message : "Unknown error occurred" }`);
+    }
+  } else {
+    console.log("No complaints to sync.");
+  }
+};
+
+
+
+  // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
+  // Handle file input changes
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFormData({ ...formData, photos: Array.from(e.target.files) });
     }
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     // Basic validation
     if (
       !formData.title ||
@@ -42,48 +119,72 @@ export function SubmitComplaint() {
       setError("All fields are required.");
       return;
     }
-
-    try {
-      const formDataToSend = new FormData();
-
-      // Append all fields to FormData
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("address", formData.address);
-      formDataToSend.append("district", formData.district);
-      formDataToSend.append("pincode", formData.pincode);
-      formDataToSend.append("urgencyLevel", formData.urgencyLevel);
-      formDataToSend.append("consentForFollowUp", formData.consentForFollowUp.toString());
-
-      // Append photos (if any)
-      if (formData.photos && formData.photos.length > 0) {
-        formData.photos.forEach((file) => {
-          formDataToSend.append("photos", file);
+  
+    const complaintData = {
+      title: formData.title,
+      description: formData.description,
+      address: formData.address,
+      district: formData.district,
+      pincode: formData.pincode,
+      urgencyLevel: formData.urgencyLevel,
+      consentForFollowUp: formData.consentForFollowUp,
+      userEmail: localStorage.getItem("userEmail") || "",
+      upvotedBy: [], // Initialize as empty array
+      upvotes: 0, // Initialize as 0
+      createdAt: new Date(), // Add current timestamp
+    };
+  
+    if (isOnline) {
+      // If online, submit the complaint directly to the server
+      try {
+        const formDataToSend = new FormData();
+        formDataToSend.append("title", formData.title);
+        formDataToSend.append("description", formData.description);
+        formDataToSend.append("address", formData.address);
+        formDataToSend.append("district", formData.district);
+        formDataToSend.append("pincode", formData.pincode);
+        formDataToSend.append("urgencyLevel", formData.urgencyLevel);
+        formDataToSend.append("consentForFollowUp", formData.consentForFollowUp.toString());
+  
+        if (formData.photos && formData.photos.length > 0) {
+          formData.photos.forEach((file) => {
+            formDataToSend.append("photos", file);
+          });
+        }
+  
+        const response = await fetch("http://localhost:3000/complaintSub", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formDataToSend,
         });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          alert("Complaint submitted successfully!");
+          navigate("/dashboard");
+        } else {
+          setError(data.msg || "Failed to submit complaint. Please try again.");
+        }
+      } catch (err) {
+        console.error("Error submitting complaint:", err);
+        setError("An error occurred. Please try again later.");
       }
-
-      const response = await fetch("http://localhost:3000/complaintSub", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formDataToSend,
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Complaint submitted successfully!");
-        navigate("/dashboard");
-      } else {
-        setError(data.msg || "Failed to submit complaint. Please try again.");
+    } else {
+      // If offline, save the complaint to IndexedDB
+      try {
+        await addComplaintToIndexedDB(complaintData);
+        alert("Complaint saved offline. It will be synced when you are back online.");
+      } catch (error) {
+        console.error("Error saving complaint offline:", error);
+        setError("Failed to save complaint offline. Please try again.");
       }
-    } catch (err) {
-      console.error("Error submitting complaint:", err);
-      setError("An error occurred. Please try again later.");
     }
   };
 
+  // Check if the current step is valid
   const isStepValid = () => {
     switch (step) {
       case 1:
@@ -269,6 +370,7 @@ export function SubmitComplaint() {
               Submit
             </button>
           </div>
+          <button onClick={syncComplaints}>Sync Complaints</button>
         </div>
       )}
     </div>

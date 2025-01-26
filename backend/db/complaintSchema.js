@@ -10,7 +10,11 @@ const complaintSchema = new mongoose.Schema({
   urgencyLevel: { type: String, enum: ["Low", "Medium", "High"], required: true },
   photos: { type: [String], default: [] },
   consentForFollowUp: { type: Boolean, required: true },
-  userEmail: { type: String, required: true },
+  userEmail: {
+    type: String,
+    required: false, // or use default
+    default: null
+  },
   upvotedBy: { type: [String], default: [] },
   upvotes: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }

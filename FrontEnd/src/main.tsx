@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import './index.css'
 import App from './App.tsx'
 import Routing from './Routing.tsx';
+import './i18n';
 
 createRoot(document.getElementById('root')!).render(
 

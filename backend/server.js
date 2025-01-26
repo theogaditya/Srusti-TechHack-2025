@@ -8,6 +8,8 @@ const Complaint = require('./db/complaintSchema');
 const cors = require('cors'); 
 const { z } = require('zod');
 require('dotenv').config();
+const sendEmail = require("./emailservices");
+const stat = require('lodash');
 
 const app = express();
 app.use(express.json());
@@ -121,7 +123,6 @@ app.post("/complaintSub", checkAuth, upload.array('photos'), async (req, res) =>
       const newComplaint = new Complaint({
         title,  
         description,
-        // category,
         address,
         district,
         pincode,
@@ -177,7 +178,6 @@ app.delete("/user/complaints/:id", checkAuth, async (req, res) => {
     }
 });
 
-
 // Get all complaints
 app.get("/complaints", async (req, res) => {
     try {
@@ -193,7 +193,6 @@ app.get("/complaints", async (req, res) => {
         res.status(500).json({ msg: "Internal server error" });
     }
 });
-
 
 // Upvote complaint
 app.put("/complaints/:id/upvote", checkAuth, async (req, res) => {
@@ -301,6 +300,138 @@ app.delete('/admin/complaints/:id', checkAdminAuth, async (req, res) => {
     } catch (error) {
         console.error("Error deleting complaint:", error);
         res.status(500).json({ msg: "Internal server error" });
+    }
+});
+
+//Statistics 
+app.get("/admin/complaints/statistics/districts", async (req, res) => {
+    try {
+        const complaints = await Complaint.find();
+        if (complaints.length === 0) {
+            return res.status(404).json({ msg: "No complaints found." });
+        }
+        const groupedComplaints = stat.groupBy(complaints, 'district');
+        const statistics = stat.map(groupedComplaints, (complaints, district) => ({
+            district,
+            count: complaints.length
+        }));
+        const sortedStatistics = stat.orderBy(statistics, 'count', 'desc');
+        res.status(200).json({ msg: "Statistics retrieved successfully!", statistics: sortedStatistics });
+    } catch (error) {
+        console.error("Error fetching statistics:", error);
+        res.status(500).json({ msg: "Internal server error" });
+    }
+});
+app.get("/admin/complaints/statistics/upvotes", async (req, res) => {
+    try {
+        const complaints = await Complaint.find();
+        if (complaints.length === 0) {
+            return res.status(404).json({ msg: "No complaints found." });
+        }
+        const sortedComplaints = stat.orderBy(complaints, 'upvotes', 'desc');
+        const mostUpvotedTitles = sortedComplaints.map(complaint => complaint.title);
+        res.status(200).json({
+            msg: "Most upvoted complaints retrieved successfully!",
+            titles: mostUpvotedTitles,
+        });
+    } catch (error) {
+        console.error("Error fetching statistics:", error);
+        res.status(500).json({ msg: "Internal server error" });
+    }
+});
+
+// Sync Offline Complaints
+// server.js - Sync route
+app.post('/complaints/sync', async (req, res) => {
+    const complaints = req.body.complaints;
+    if (!Array.isArray(complaints) || complaints.length === 0) {
+      return res.status(400).json({ msg: "No complaints provided for sync." });
+    }
+    try {
+      const insertedComplaints = [];
+      for (const complaint of complaints) {
+        const { 
+          title, 
+          description, 
+          address, 
+          district, 
+          pincode, 
+          urgencyLevel, 
+          consentForFollowUp, 
+          userEmail = null // Make userEmail optional with a default of null
+        } = complaint;
+  
+        // Validate required fields, removing userEmail from the check
+        if (
+          !title || 
+          !description || 
+          !address || 
+          !district || 
+          !pincode || 
+          !urgencyLevel || 
+          consentForFollowUp === undefined
+        ) {
+          console.error("Missing required fields in complaint:", complaint);
+          return res.status(400).json({ msg: "Missing required fields in one or more complaints." });
+        }
+  
+        // Validate urgencyLevel
+        if (!["Low", "Medium", "High"].includes(urgencyLevel)) {
+          console.error("Invalid urgencyLevel in complaint:", complaint);
+          return res.status(400).json({ msg: "Invalid urgencyLevel in one or more complaints." });
+        }
+  
+        const newComplaint = new Complaint({
+          title,
+          description,
+          address,
+          district,
+          pincode,
+          urgencyLevel,
+          consentForFollowUp,
+          userEmail, // Now can be null
+        });
+        const savedComplaint = await newComplaint.save();
+        insertedComplaints.push(savedComplaint);
+      }
+      res.status(201).json({
+        msg: "Complaints synced successfully!",
+        syncedComplaints: insertedComplaints,
+      });
+    } catch (error) {
+      console.error("Error syncing complaints:", error);
+      res.status(500).json({ msg: "Internal server error" });
+    }
+  });
+
+// Send Mail
+app.put("/complaints/:id/status", async (req, res) => {
+    const complaintId = req.params.id;
+    const { status } = req.body;
+    // Validate the status field
+    if (!status) {
+        return res.status(400).json({ msg: "Status field is required." });
+    }
+    try {
+        const complaint = await Complaint.findById(complaintId);
+        if (!complaint) {
+            return res.status(404).json({ msg: "Complaint not found." });
+        }
+
+        // Update the complaint status
+        complaint.status = status;
+        await complaint.save();
+
+        // Send email notification if status is "completed"
+        if (status.toLowerCase() === "completed") {
+            const emailText = `Hello,\n\nYour complaint titled "${complaint.title}" has been marked as "completed".\n\nThank you for using our service!`;
+            await sendEmail(complaint.userEmail, "Complaint Status Updated", emailText);
+        }
+
+        res.status(200).json({ msg: "Complaint status updated successfully!" });
+    } catch (error) {
+        console.error("Error updating complaint status:", error);
+        res.status(500).json({ msg: "Internal server error." });
     }
 });
 

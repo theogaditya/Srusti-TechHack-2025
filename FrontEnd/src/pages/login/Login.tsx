@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Login.css"; // Add styling for the Login page
+import "./Login.css";
+import { useTranslation } from 'react-i18next';
+import { jwtDecode } from 'jwt-decode';
 
 export function Login() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const { t } = useTranslation();
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,74 +18,75 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (!formData.email || !formData.password) {
-      setError("All fields are required.");
+      setError(t('login.errors.allFieldsRequired'));
       return;
     }
 
     try {
       const response = await fetch("http://localhost:3000/signin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Save the JWT token in localStorage
         localStorage.setItem("token", data.token);
-        alert("Login successful!");
-        navigate("/dashboard"); // Redirect to the home page after successful login
+        
+        // Decode the token to get user email
+        const decoded: { email: string } = jwtDecode(data.token);
+        localStorage.setItem("userEmail", decoded.email); // Store email
+        
+        alert(t('login.success'));
+        navigate("/dashboard");
       } else {
-        setError(data.msg || "Login failed. Please check your credentials.");
+        setError(data.msg || t('login.errors.failed'));
       }
     } catch (err) {
       console.error("Error during login:", err);
-      setError("An error occurred. Please try again later.");
+      setError(t('login.errors.generic'));
     }
   };
 
   return (
     <div className="login-container">
-      <h1>Login</h1>
+      <h1>{t('login.title')}</h1>
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t('login.email')}</label>
           <input
             type="email"
             id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
+            placeholder={t('login.emailPlaceholder')}
             required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t('login.password')}</label>
           <input
             type="password"
             id="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter your password"
+            placeholder={t('login.passwordPlaceholder')}
             required
           />
         </div>
         <button type="submit" className="login-button">
-          Login
+          {t('login.button')}
         </button>
       </form>
       <p>
-        Don't have an account?{" "}
+        {t('login.noAccount')}{" "}
         <span onClick={() => navigate("/signup")} className="signup-link">
-          Sign up here
+          {t('login.signupLink')}
         </span>
       </p>
     </div>

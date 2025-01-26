@@ -1,37 +1,35 @@
 import React from "react";
-import "./testi.css"; // Import the CSS file
+import "./testi.css";
+import { useTranslation } from 'react-i18next';
 
 export function Testimonials() {
+  const { t } = useTranslation();
+
   const testimonials = [
     {
       id: 1,
       name: "Aishwarya Priyadarshini",
-      role: "Farmer",
-      feedback:
-        "loved the community tab",
+      role: t('testimonials.roles.farmer'),
+      feedback: t('testimonials.feedback1'),
     },
     {
       id: 2,
       name: "Samiksha Sahoo",
-      role: "Teacher",
-      feedback:
-        "I love how easy it is to register complaints and track their progress. Highly recommended!",
+      role: t('testimonials.roles.teacher'),
+      feedback: t('testimonials.feedback2'),
     },
     {
       id: 3,
       name: "Aditya Hota",
-      role: "Farmer",
-      feedback:
-        "The user interface is clean and intuitive. It makes resolving issues a breeze",
+      role: t('testimonials.roles.farmer'),
+      feedback: t('testimonials.feedback3'),
     },
   ];
 
   return (
     <section className="testimonials-section">
-      <h2 className="testimonials-title">What Our Users Say</h2>
-      <p className="testimonials-subtitle">
-        Hear from our satisfied customers about their experiences.
-      </p>
+      <h2 className="testimonials-title">{t('testimonials.title')}</h2>
+      <p className="testimonials-subtitle">{t('testimonials.subtitle')}</p>
       <div className="testimonials-grid">
         {testimonials.map((testimonial) => (
           <div key={testimonial.id} className="testimonial-card">

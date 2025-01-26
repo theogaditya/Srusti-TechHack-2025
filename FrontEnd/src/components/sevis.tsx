@@ -1,32 +1,33 @@
 import React from "react";
 import "./sevis.css"; // Import the CSS file
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 export function RegisterSection() {
   const navigate = useNavigate();
+  const { t } = useTranslation(); // Initialize useTranslation
 
   return (
     <section className="register-section">
       <div className="register-content">
-        <h2 className="register-title">Register Complaint Now</h2>
+        <h2 className="register-title">{t('registerComplaint')}</h2>
         <p className="register-description">
-          Join us to resolve your issues quickly and efficiently. Whether you're a new user or an existing one, we're here to help!
+          {t('registerDescription')}
         </p>
         <div className="register-buttons">
           <button
             onClick={() => navigate("/login")}
             className="register-button main-login-button"
           >
-            Login
+            {t('mainlogin')}
           </button>
           <button
             onClick={() => navigate("/signup")}
             className="register-button main-signup-button"
           >
-            Sign Up
+            {t('mainsignup')}
           </button>
         </div>
-
       </div>
     </section>
   );

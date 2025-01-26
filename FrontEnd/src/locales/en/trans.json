@@ -1,0 +1,116 @@
+{
+  "welcome": "Welcome to Our Complaint Portal",
+  "subtitle": "Your voice matters. File your complaints and make a difference today!",
+  "mainlogin": "Login",
+  "mainsignup": "Sign Up",
+  "about": "About Us",
+  "privacy": "Privacy Policy",
+  "terms": "Terms of Service",
+  "contact": "Contact Us",
+  "registerComplaint": "Register Complaint Now",
+  "registerDescription": "Join us to resolve your issues quickly and efficiently. Whether you're a new user or an existing one, we're here to help!",
+  "statistics": {
+    "header": "Our Impact",
+    "description": "Here are the numbers showing the difference we're making!",
+    "complaintsResolved": "Complaints Resolved",
+    "registeredUsers": "Registered Users",
+    "responseTimeImprovement": "Improvement in Response Time",
+    "customerSatisfaction": "Customer Satisfaction",
+    "progressBarLabel": "90% of complaints resolved on time"
+  },
+
+  "testimonials": {
+    "title": "What Our Users Say",
+    "subtitle": "Hear from our satisfied customers about their experiences.",
+    "roles": {
+      "farmer": "Farmer",
+      "teacher": "Teacher"
+    },
+    "feedback1": "I loved the community tab!",
+    "feedback2": "I love how easy it is to register complaints and track their progress. Highly recommended!",
+    "feedback3": "The user interface is clean and intuitive. It makes resolving issues a breeze."
+  },
+
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "button": "Login",
+    "noAccount": "Don't have an account?",
+    "signupLink": "Sign up here",
+    "errors": {
+      "allFieldsRequired": "All fields are required.",
+      "failed": "Login failed. Please check your credentials.",
+      "generic": "An error occurred. Please try again later."
+    },
+    "success": "Login successful!"
+  },
+
+  "signup": {
+    "title": "Sign Up",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password (at least 7 characters)",
+    "button": "Sign Up",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Log in here",
+    "errors": {
+      "allFieldsRequired": "All fields are required.",
+      "passwordLength": "Password must be at least 7 characters long.",
+      "failed": "Sign up failed. Please try again.",
+      "generic": "An error occurred. Please try again later."
+    },
+    "success": "Sign up successful! Please log in."
+  },
+
+
+
+  "dashboard": {
+    "heading": "📈 Trading Complaints",
+    "registerNewComplaint": "Register New Complaint",
+    "showMostUpvoted": "Show Most Upvoted",
+    "showAllComplaints": "Show All Complaints",
+    "showMyComplaints": "Show My Complaints"
+  },
+  "submitComplaint": {
+    "title": "Register New Complaint",
+    "step": "Step",
+    "of": "of",
+    "step1": "Step 1: Basic Information",
+    "step2": "Step 2: Location Details",
+    "step3": "Step 3: Additional Details",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Enter complaint title",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe your complaint",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Enter your address",
+    "districtLabel": "District",
+    "districtPlaceholder": "Enter your district",
+    "pincodeLabel": "Pincode",
+    "pincodePlaceholder": "Enter your pincode",
+    "urgencyLevelLabel": "Urgency Level",
+    "urgencyLow": "Low",
+    "urgencyMedium": "Medium",
+    "urgencyHigh": "High",
+    "uploadPhotosLabel": "Upload Photos (Max 5)",
+    "consentForFollowUp": "I consent to follow-up communication regarding this complaint.",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "errors": {
+      "allFieldsRequired": "All fields are required.",
+      "failed": "Failed to submit complaint. Please try again.",
+      "generic": "An error occurred. Please try again later."
+    },
+    "success": "Complaint submitted successfully!"
+  },
+  "footer": {
+    "copyright": "© 2025 Primeagen Complaint Portal. All Rights Reserved."
+  }
+}
